@@ -1,0 +1,29 @@
+{
+	"folders":
+	[
+		{
+			"file_include_patterns":
+			[
+				"*.rs",
+				"*.toml",
+				"*.sublime-project"
+			],
+			"folder_exclude_patterns":
+			[
+				"target"
+			],
+			"path": "."
+		}
+	],
+	"settings":
+	{
+		"LSP":
+		{
+			"rls":
+			{
+				"enabled": true
+			}
+		}
+	},
+	"working_dir": "."
+}
