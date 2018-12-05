@@ -5,7 +5,8 @@ use std::path::Path;
 use std::error::Error;
 use std::collections::HashMap;
 extern crate chrono;
-use chrono::{NaiveDateTime, NaiveTime, Duration};
+use chrono::{NaiveDateTime, NaiveDate, NaiveTime, Duration, Timelike};
+
 
 
 #[derive(Debug)]
@@ -65,8 +66,13 @@ fn parse_log_messages(messages: &Vec<String>) -> Vec<LogMessage> {
 
 
 fn main() {
-    let START_TIME : NaiveTime = NaiveTime::parse_from_str("00:00", "%H:%M").expect("bla");
-    let END_TIME : NaiveTime = NaiveTime::parse_from_str("00:59", "%H:%M").expect("bla");
+    // let ss : NaiveTime = NaiveTime::parse_from_str("00:32", "%H:%M").expect("bla");
+    // let END_TIME : NaiveTime = NaiveTime::parse_from_str("01:00", "%H:%M").expect("bla");
+    // let dt: NaiveDateTime = NaiveDate::from_ymd(2015, 9, 8).and_hms_milli(12, 34, 56, 789);
+
+    // let t = NaiveTime::from_hms(23, 56, 4);
+    // println!("{:?}", ss.minute());
+    // ss.num_seconds_from_midnight();
 
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
@@ -91,64 +97,82 @@ fn main() {
     let mut guard_sleep_time: HashMap<u32, i64>
         = HashMap::new();
 
-    let mut temp: HashMap<u32, [i64;59]>
+    let mut temp: HashMap<u32, [u32;60]>
         = HashMap::new();
 
 
     let mut guard_id: u32 = 0;
-    let mut last_sleep_time: NaiveDateTime = log_messages[0].timestamp.clone();
+    let mut last_sleep_time: u32 = 0;
+
+    let zero_arr: [u32;60] = [0; 60];
     for message in &log_messages{
         if let LogMessageKind::ShiftChange(id) = message.kind{
             guard_id = id;
         } else if let LogMessageKind::Sleep(ts) = message.kind {
-            last_sleep_time = message.timestamp;
+            last_sleep_time = ts.minute();
         }
         else if let LogMessageKind::Wake(ts) = message.kind {
             let timestamp = message.timestamp;
-            let dur = timestamp.signed_duration_since(last_sleep_time)
-                .num_minutes();
+            let wake_time = ts.minute();
 
-            let count = guard_sleep_time.entry(guard_id)
-            .or_insert(0);
-            *count += dur;
+            let counts = temp.entry(guard_id)
+                .or_insert(zero_arr);
+
+            for i in last_sleep_time..wake_time{
+                let xx: usize = i as usize;
+                counts[xx] += 1;
+            }
         }
-        // match message.kind  {
-        //     LogMessageKind::ShiftChange(id) => println!("guard {} start {:?}", id, message.timestamp),
-        //     LogMessageKind::Sleep => println!("sleep {:?}", message.timestamp),
-        //     LogMessageKind::Wake => println!("wake {:?}", message.timestamp),
-        // }
+
     }
-    // let mut guard_id_max: u32;
-    // let mut guard_sleep_max:
-    // for (guard_id, count) in &guard_sleep_time {
-    //     println!("guard {}, slept for {}", guard_id, count);
-    // }
+    let mut guard_id_max: u32 = 0;
+    let mut guard_sleep_max: u32 = 0;
+    let mut guard_id_freq_max : u32 = 0;
+    let mut guard_id_freq_max_value : u32 = 0;
+
+    for (guard_id, counts) in &temp {
+        let sum = counts.iter().fold(0,|a, &b| a + b);
+        if sum > guard_sleep_max{
+            guard_sleep_max = sum;
+            guard_id_max = *guard_id;
+        }
+
+        if let Some(freq) = counts.iter().max(){
+            if *freq > guard_id_freq_max_value{
+                guard_id_freq_max_value = *freq;
+                guard_id_freq_max = *guard_id;
+            }
+        }
 
 
-    let sample = String::from("[1518-11-01 00:32] Guard #100 begins shift");
-    // let sss = &sample[19..];
-    // let sss = &sss[7..];
-    // let space_offset = sss.find(' ').unwrap_or(0);
-    // let sss = &sss[..space_offset];
-    // println!("{:?}", sss);
+    }
 
-    let time_slice = &sample[1..17];
-    // println!("{:?}", time_slice);
-    let time = match NaiveTime::parse_from_str(&time_slice, "%Y-%m-%d %H:%M"){
-        Err(why) => panic!("couldn't parse time {}  ", why.description()),
-        Ok(time) => println!("{:?}",time)
-    };
+    let max_counts = temp.get(&guard_id_max).expect("bla");
+    let mut tmp_val = 0;
+    let mut tmp_idx: u32 = 0;
+    for (i, c) in max_counts.iter().enumerate() {
+        if *c > tmp_val{
+            tmp_val = *c;
+            tmp_idx = i as u32;
+        }
+    }
 
-    // let sample = String::from("[1518-11-03 00:02] Guard #10 begins shift");
-    // let time_slice = &sample[1..17];
-    // let time2 = match NaiveDateTime::parse_from_str(&time_slice, "%Y-%m-%d %H:%M"){
-    //     Err(why) => panic!("couldn't parse time {}  ", why.description()),
-    //     Ok(time2) => time2,
-    // };
+    println!("idx {}, id {}", tmp_idx, guard_id_max);
+    println!("result {}", tmp_idx*guard_id_max);
 
-    // let dur = time.signed_duration_since(time2);
+    let max_freqs = temp.get(&guard_id_freq_max).expect("bla");
+    let mut tmp_val = 0;
+    let mut tmp_idx: u32 = 0;
+    for (i, c) in max_freqs.iter().enumerate() {
+        if *c > tmp_val{
+            tmp_val = *c;
+            tmp_idx = i as u32;
+        }
+    }
 
-    // println!("{:?}", dur.num_minutes());
+    println!("idx {}, id {}", tmp_idx, guard_id_freq_max);
+    println!("result {}", tmp_idx*guard_id_freq_max);
+
 }
 
 
