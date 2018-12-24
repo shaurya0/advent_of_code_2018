@@ -1,4 +1,12 @@
 {
+	"build_systems":
+	[
+		{
+			"name": "run",
+			"working_dir": "$project_path",
+			"shell_cmd": "cargo run --bin day7 input/day7/sample.txt"
+		},
+	],
 	"folders":
 	[
 		{
