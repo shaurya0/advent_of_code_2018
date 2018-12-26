@@ -24,7 +24,16 @@ path = "src/day4/day4.rs"
 name = "day7"
 path = "src/day7/day7.rs"
 
+[[bin]]
+name = "day10"
+path = "src/day10/day10.rs"
+
+[[bin]]
+name = "day11"
+path = "src/day11/day11.rs"
+
 
 [dependencies]
 chrono = "0.4.6"
 petgraph = "0.4.13"
+regex = "1"
