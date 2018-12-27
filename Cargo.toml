@@ -32,6 +32,10 @@ path = "src/day10/day10.rs"
 name = "day11"
 path = "src/day11/day11.rs"
 
+[[bin]]
+name = "day16"
+path = "src/day16/day16.rs"
+
 
 [dependencies]
 chrono = "0.4.6"
